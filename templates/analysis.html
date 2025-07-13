@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en" >
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Project Analysis - AI Optimization</title>
+
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['"Trebuchet MS"', 'Helvetica', 'sans-serif']
+                        },
+                        colors: {
+                            primaryGreen: {
+                                DEFAULT: '#256d3b',
+                                light: '#4a9867',
+                                dark: '#1d502a',
+                            },
+                            offwhite: '#f8faf6',
+                            calmGray: {
+                                light: '#e6e8e3',
+                                DEFAULT: '#9ca3af',
+                                dark: '#6b7280',
+                            }
+                        },
+                        keyframes: {
+                            fadeIn: {
+                                '0%': { opacity: 0, transform: 'translateY(10px)' },
+                                '100%': { opacity: 1, transform: 'translateY(0)' }
+                            }
+                        },
+                        animation: {
+                            fadeIn: 'fadeIn 0.5s ease-out forwards'
+                        }
+                    }
+                }
+            }
+        </script>
+
+        <style>
+            body {
+                background-color: #f8faf6;
+            }
+        </style>
+    </head>
+
+    <body class="text-primaryGreen font-sans bg-offwhite min-h-screen">
+
+        <!-- Navigation -->
+        <nav class="bg-[#f9f9f6] shadow-sm border-b border-gray-200 py-4 px-8 flex items-center justify-between sticky top-0 z-50">
+            <div class="flex items-center space-x-3">
+                <i data-feather="cpu" class="w-5 h-5 text-[#2f5930]"></i>
+                <span class="text-lg font-bold text-[#2f5930] tracking-wide">AI Optimizer</span>
+            </div>
+            <a href="{{ url_for('optimization') }}" class="text-primaryGreen-dark hover:underline text-sm">← Back to Projects</a>
+        </nav>
+
+        <main class="max-w-5xl mx-auto py-10 px-6 animate-fadeIn">
+
+            <header class="mb-10 text-center">
+                <h1 class="text-4xl font-black mb-2">{{ project.title }}</h1>
+                <p class="text-primaryGreen-dark text-lg italic max-w-3xl mx-auto">{{ project.description }}</p>
+            </header>
+
+            <!-- Advertisement Media Preview -->
+            <section class="mb-12 bg-white rounded-3xl shadow-xl p-6">
+                <div class="flex flex-col lg:flex-row items-start gap-6">
+
+                    <!-- Media Display -->
+                    <div class="w-full lg:w-3/4">
+                        {% if project.filename.endswith(('.mp4', '.webm', '.ogg')) %}
+                        <div class="relative">
+                            <video id="adVideo" controls class="mx-auto rounded-lg max-h-80 w-full object-contain">
+                                <source src="{{ url_for('uploaded_file', filename=project.filename) }}" type="video/mp4" />
+                                Your browser does not support the video tag.
+                            </video>
+                            <div class="absolute top-2 left-2 bg-primaryGreen-light text-white text-xs px-2 py-1 rounded">Video</div>
+                        </div>
+
+                        <!-- Advanced Controls -->
+                        <div class="flex items-center justify-center mt-4 gap-4">
+                            <button onclick="toggleMute()" class="text-sm text-primaryGreen-dark hover:underline">🔇 Toggle Mute</button>
+                            <label class="text-sm text-primaryGreen-dark flex items-center gap-1">
+                                Speed:
+                                <select onchange="changeSpeed(this.value)" class="border rounded px-2 py-1 text-sm">
+                                    <option value="0.5">0.5x</option>
+                                    <option value="1" selected>1x</option>
+                                    <option value="1.5">1.5x</option>
+                                    <option value="2">2x</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        {% else %}
+                        <div class="relative text-center">
+                            <img src="{{ url_for('uploaded_file', filename=project.filename) }}" alt="Advertisement Media" class="mx-auto rounded-lg max-h-80 w-auto" />
+                            <div class="absolute top-2 left-2 bg-primaryGreen-light text-white text-xs px-2 py-1 rounded">Image</div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Download Button -->
+                        <div class="text-center mt-4">
+                            <a href="{{ url_for('uploaded_file', filename=project.filename) }}" download class="inline-block text-primaryGreen-light underline text-sm">⬇️ Download Advertisement</a>
+                        </div>
+                    </div>
+
+                    <!-- Metadata and Caption -->
+                    <div class="w-full lg:w-1/4 text-sm text-gray-700 space-y-3">
+                        <div>
+                            <span class="font-semibold">Filename:</span><br>{{ project.filename }}
+                        </div>
+                        <div>
+                            <span class="font-semibold">Uploaded:</span><br>{{ project.timestamp }}
+                        </div>
+                        <div>
+                            <span class="font-semibold">File Size:</span><br>
+                            <!-- Optional: You can fetch this in backend and pass it -->
+                            {{ project_size or "Unknown" }}
+                        </div>
+                        <div>
+                            <span class="font-semibold">AI Caption:</span><br>
+                            <span class="italic text-gray-500">{{ ai_caption or "Auto caption not available." }}</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <script>
+                function toggleMute() {
+                    const video = document.getElementById("adVideo");
+                    video.muted = !video.muted;
+                }
+
+                function changeSpeed(rate) {
+                    const video = document.getElementById("adVideo");
+                    video.playbackRate = parseFloat(rate);
+                }
+            </script>
+
+            <section class="mb-12 bg-white rounded-3xl shadow-xl p-6">
+                <h2 class="text-2xl font-bold mb-4 text-primaryGreen-dark">AI Impact Predictor</h2>
+
+                <!-- Impact Score -->
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm mb-1 text-primaryGreen-dark">
+                        <span>Predicted Overall Impact</span>
+                        <span>{{ ai_impact_score or "..." }}/100</span>
+                    </div>
+                    <div class="w-full bg-calmGray-light rounded-full h-4 overflow-hidden">
+                        <div class="bg-primaryGreen h-4 rounded-full transition-all duration-700" style="width: {{ ai_impact_score or 60 }}%;"></div>
+                    </div>
+                </div>
+
+                <!-- Confidence Level -->
+                <div class="text-sm text-gray-600 mb-4">
+                    <strong>AI Confidence Level:</strong>
+                    <span class="ml-2 px-2 py-1 rounded-full text-white text-xs font-medium
+      {% if ai_impact_confidence == 'High' %} bg-green-600
+      {% elif ai_impact_confidence == 'Moderate' %} bg-yellow-500
+      {% else %} bg-red-500
+      {% endif %}
+    ">
+      {{ ai_impact_confidence or "Moderate" }}
+    </span>
+                </div>
+
+                <!-- AI Forecast Text -->
+                <div class="text-gray-700 mb-6 whitespace-pre-line">
+                    {{ ai_impact_prediction or "Analyzing impact predictions..." }}
+                </div>
+
+                <!-- Forecasted Metrics Table -->
+                <div class="overflow-x-auto mb-6">
+                    <table class="min-w-full table-auto text-left text-sm">
+                        <thead>
+                        <tr class="text-primaryGreen-dark border-b border-gray-200">
+                            <th class="py-2 px-4">Metric</th>
+                            <th class="py-2 px-4">Estimated Value</th>
+                        </tr>
+                        </thead>
+                        <tbody class="text-gray-700">
+                        <tr><td class="py-2 px-4">Click-through Rate (CTR)</td><td class="py-2 px-4">{{ ai_ctr or "2.8%" }}</td></tr>
+                        <tr><td class="py-2 px-4">Viewer Retention</td><td class="py-2 px-4">{{ ai_retention or "64%" }}</td></tr>
+                        <tr><td class="py-2 px-4">Estimated ROI</td><td class="py-2 px-4">{{ ai_roi or "$8.50 per $1 spent" }}</td></tr>
+                        <tr><td class="py-2 px-4">Conversion Likelihood</td><td class="py-2 px-4">{{ ai_conversion or "Moderate to High" }}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- AI Suggestions -->
+                <div class="bg-calmGray-light p-4 rounded-xl text-sm text-gray-800">
+                    <h3 class="font-semibold mb-2 text-primaryGreen-dark">Suggestions for Improvement</h3>
+                    <ul class="list-disc pl-5 space-y-1">
+                        {% for suggestion in ai_impact_suggestions or ["Ensure stronger call-to-action", "Consider shortening intro", "Use more vibrant colors in thumbnail"] %}
+                        <li>{{ suggestion }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Emotional Sentiment Timeline -->
+            <section class="mb-12 bg-white rounded-3xl shadow-xl p-6">
+                <h2 class="text-2xl font-bold mb-4 text-primaryGreen-dark">Emotional Sentiment Timeline</h2>
+
+                <!-- Chart Canvas -->
+                <div class="mb-6">
+                    <canvas id="sentimentChart" class="w-full max-w-full h-64"></canvas>
+                </div>
+
+                <!-- Summary Metrics -->
+                <div class="bg-calmGray-light rounded-xl p-4 mb-6 text-gray-800 text-sm">
+                    <p><strong>Dominant Emotion:</strong> {{ dominant_emotion or "Joy" }}</p>
+                    <p><strong>Peak Moment:</strong> {{ peak_time or "0:36 - Surprising twist" }}</p>
+                    <p><strong>Average Sentiment:</strong> {{ average_sentiment or "+0.42 (positive)" }}</p>
+                </div>
+
+                <!-- AI Summary -->
+                <div class="bg-offwhite p-4 rounded-xl text-gray-800 text-sm mb-6">
+                    <h3 class="font-semibold text-primaryGreen-dark mb-2">AI Emotional Arc Summary</h3>
+                    <p class="whitespace-pre-line">{{ sentiment_summary or "The ad starts with neutral anticipation, quickly builds joy and trust, and ends with a surprising upbeat conclusion that enhances brand recall." }}</p>
+                </div>
+
+                <!-- Key Emotional Moments -->
+                <div class="text-sm text-gray-700">
+                    <h3 class="font-semibold text-primaryGreen-dark mb-2">Key Emotional Spikes</h3>
+                    <ul class="list-disc pl-6 space-y-1">
+                        {% for moment in emotional_moments or [
+                        "0:12 – Spike in joy due to upbeat music introduction",
+                        "0:36 – Surprise detected during offer reveal",
+                        "1:05 – Trust and joy peak at closing message"
+                        ] %}
+                        <li>{{ moment }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </section>
+
+            <section class="mb-12 bg-white rounded-3xl shadow-xl p-6">
+                <h2 class="text-2xl font-bold mb-6 text-primaryGreen-dark">AI Breakdown & Coaching</h2>
+
+                <!-- AI Coaching Summary -->
+                <div class="bg-calmGray-light rounded-xl p-4 mb-6 text-gray-800 text-sm">
+                    <h3 class="font-semibold text-primaryGreen-dark mb-2">Coaching Summary</h3>
+                    <p class="whitespace-pre-wrap">
+                        {{ ai_coaching_insights or "Generating coaching insights based on language, pacing, and message impact..." }}
+                    </p>
+                </div>
+
+                <!-- Strengths & Improvements -->
+                <div class="grid sm:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-primaryGreen/10 border-l-4 border-primaryGreen-dark rounded-xl p-4 text-sm">
+                        <h4 class="font-semibold text-primaryGreen-dark mb-2">✅ Key Strengths</h4>
+                        <ul class="list-disc pl-5 text-primaryGreen space-y-1">
+                            {% for strength in strengths or ["Strong emotional hook in opening", "Clean, professional visuals", "Clear brand messaging"] %}
+                            <li>{{ strength }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <div class="bg-primaryGreen/5 border-l-4 border-primaryGreen rounded-xl p-4 text-sm">
+                        <h4 class="font-semibold text-primaryGreen mb-2">⚠️ Areas to Improve</h4>
+                        <ul class="list-disc pl-5 text-primaryGreen-light space-y-1">
+                            {% for tip in improvement_tips or ["CTA could be more specific", "Ending lacks emotional resolution", "Voiceover pacing is slightly rushed"] %}
+                            <li>{{ tip }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Target Audience Match -->
+                <div class="bg-primaryGreen/10 border-l-4 border-primaryGreen-dark rounded-xl p-4 mb-6 text-sm">
+                    <h4 class="font-semibold text-primaryGreen-dark mb-2">🎯 Target Audience Fit</h4>
+                    <p class="text-primaryGreen">
+                        {{ audience_fit or "The ad aligns well with urban Gen-Z consumers, leveraging upbeat tempo, vibrant visuals, and casual language that resonates with digitally native viewers." }}
+                    </p>
+                </div>
+
+                <!-- Tone & Language Map -->
+                <div class="bg-primaryGreen/10 border-l-4 border-primaryGreen rounded-xl p-4 mb-6 text-sm">
+                    <h4 class="font-semibold text-primaryGreen mb-2">🗺️ Messaging & Tone Analysis</h4>
+                    <p class="text-primaryGreen-light mb-2">Detected emotional and tonal signatures:</p>
+                    <div class="flex flex-wrap gap-2">
+                        {% for tone in detected_tones or ["Inspiring", "Upbeat", "Sincere", "Motivational"] %}
+                        <span class="bg-primaryGreen-light/20 text-primaryGreen px-3 py-1 rounded-full text-xs font-semibold">{{ tone }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Call-to-Action Review -->
+                <div class="bg-primaryGreen/10 border-l-4 border-primaryGreen-dark rounded-xl p-4 text-sm">
+                    <h4 class="font-semibold text-primaryGreen-dark mb-2">📣 Call-to-Action Effectiveness</h4>
+                    <p class="text-primaryGreen-light">
+                        {{ cta_feedback or "The CTA is positioned clearly at the end but could benefit from a stronger sense of urgency or a more emotional push to convert." }}
+                    </p>
+                </div>
+            </section>
+
+        </main>
+
+        <script>
+            // Sample sentiment data - Replace with dynamic data from Flask backend
+            const sentimentData = {{ sentiment_data | safe }} || {
+                labels: ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"],
+                    scores: [0.2, 0.5, -0.1, 0.6, 0.3]
+            };
+
+            const ctx = document.getElementById('sentimentChart').getContext('2d');
+            const sentimentChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sentimentData.labels,
+                    datasets: [{
+                        label: 'Sentiment Score',
+                        data: sentimentData.scores,
+                        fill: true,
+                        borderColor: '#256d3b',
+                        backgroundColor: 'rgba(37, 109, 59, 0.2)',
+                        tension: 0.3,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#256d3b'
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            min: -1,
+                            max: 1,
+                            ticks: {
+                                stepSize: 0.5
+                            },
+                            title: {
+                                display: true,
+                                text: 'Sentiment (-1 to 1)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#256d3b',
+                                font: { weight: 'bold' }
+                            }
+                        },
+                        tooltip: {
+                            enabled: true,
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                }
+            });
+        </script>
+    </body>
+</html>

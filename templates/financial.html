@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Financial Performance & Pricing Strategies</title>
+
+        <!-- Tailwind CSS -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet" />
+        <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://unpkg.com/feather-icons"></script>
+
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            primary: '#256d3b',
+                            primaryLight: '#4a9867',
+                            primaryDark: '#1d502a',
+                            offwhite: '#f8faf6',
+                            grayBorder: '#e6e8e3'
+                        },
+                        fontFamily: {
+                            sans: ['"Trebuchet MS"', 'Helvetica', 'sans-serif']
+                        },
+                        keyframes: {
+                            fadeIn: {
+                                '0%': { opacity: 0, transform: 'translateY(10px)' },
+                                '100%': { opacity: 1, transform: 'translateY(0)' }
+                            }
+                        },
+                        animation: {
+                            fadeIn: 'fadeIn 0.5s ease-out forwards'
+                        }
+                    }
+                }
+            }
+        </script>
+
+        <style>
+            body {
+                background-color: #f8faf6;
+                font-family: "Trebuchet MS", Helvetica, sans-serif;
+            }
+
+            .card {
+                padding: 1.5rem;
+                border-radius: 1rem;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+                background: white;
+                cursor: pointer;
+                transition: transform 0.2s ease;
+            }
+            .card:hover {
+                transform: scale(1.02);
+            }
+
+            .modal {
+                position: fixed;
+                top: 0; left: 0;
+                width: 100vw; height: 100vh;
+                background: rgba(0,0,0,0.6);
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 100;
+            }
+            .modal-content {
+                background: white;
+                border-radius: 1rem;
+                padding: 2rem;
+                width: 95vw;
+                max-width: 1000px;
+                max-height: 90vh;
+                overflow-y: auto;
+                animation: slideUp 0.3s ease;
+            }
+            @keyframes slideUp {
+                from { transform: translateY(20px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+
+            #editor {
+                height: 280px;
+                background: white;
+                border: 1px solid #9ca3af;
+                border-radius: 0.5rem;
+                padding: 0.5rem;
+                overflow-y: auto;
+            }
+        </style>
+    </head>
+
+    <body class="text-primary font-sans">
+
+        <nav class="bg-[#f9f9f6] backdrop-blur-md shadow-sm border-b border-gray-200 py-4 px-8 flex items-center justify-between sticky top-0 z-50">
+            <div class="flex items-center space-x-3">
+                <i data-feather="home" class="w-5 h-5 text-[#2f5930]"></i>
+                <a href="/dashboard" class="text-lg font-bold text-[#2f5930] tracking-wide">Dashboard</a>
+            </div>
+            <div class="flex space-x-6 text-sm font-medium">
+                <a href="/optimization" class="text-gray-600 hover:text-[#2f5930]">Optimize Ads</a>
+                <a href="/academy" class="text-gray-600 hover:text-[#2f5930]">Ad Academy</a>
+                <a href="/financial" class="text-gray-600 hover:text-[#2f5930]">Ad Financials</a>
+
+                <!--
+                <a href="/stats" class="text-gray-600 hover:text-[#2f5930]">Statistics</a>
+                <a href="/info" class="text-gray-600 hover:text-[#2f5930]">Info</a>
+                <a href="connections.html">Connections</a>
+                -->
+            </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto px-6 py-12 animate-fadeIn">
+            <!-- Hero / Intro -->
+            <header class="mb-12 text-center">
+                <h1 class="text-5xl font-bold text-primary mb-4">Financial Performance & Pricing Strategies</h1>
+                <p class="text-lg text-gray-700 max-w-2xl mx-auto">
+                    This is a section aimed to provide insight into pricing and how different advertisements are helping
+                </p>
+            </header>
+
+            <!-- Strategy Generator Form -->
+            <section class="mb-12 bg-white border-l-4 border-primary p-6 rounded-xl shadow transition-shadow hover:shadow-lg">
+                <h2 class="text-2xl font-semibold text-primary mb-4">Generate Pricing Strategy Ideas</h2>
+                <form id="strategyForm" class="flex flex-col sm:flex-row gap-4">
+                    <input
+                            name="topic"
+                            placeholder="Enter your product or service..."
+                            required
+                            class="flex-1 border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                    <button
+                            type="submit"
+                            class="bg-primary hover:bg-primaryDark text-white px-6 py-3 rounded font-semibold shadow transition hover:scale-105"
+                    >
+                        Generate Strategy
+                    </button>
+                </form>
+                <div id="strategyOutput" class="mt-6 p-4 bg-offwhite border border-primary rounded-lg text-primary text-base whitespace-pre-wrap hidden"></div>
+            </section>
+            <!-- Strategy Board Section -->
+            <section class="mb-16 animate-fadeIn">
+                <h2 class="text-3xl font-bold text-primary mb-6 text-center">Your Pricing Strategy Board</h2>
+
+                <!-- Add New Strategy -->
+                <div class="bg-white rounded-3xl shadow-xl p-8 mb-10 transition-shadow hover:shadow-2xl">
+                    <h3 class="text-2xl font-semibold mb-4 text-primary">Add New Strategy</h3>
+                    <form id="addStrategyForm" class="space-y-4">
+                        <div>
+                            <label for="strategyTitle" class="block font-medium text-gray-700 mb-1">Title</label>
+                            <input
+                                    id="strategyTitle"
+                                    type="text"
+                                    placeholder="e.g. Value-Based Pricing for Premium Plan"
+                                    required
+                                    class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-primary"
+                            >
+                        </div>
+                        <div>
+                            <label for="strategyDescription" class="block font-medium text-gray-700 mb-1">Description</label>
+                            <textarea
+                                    id="strategyDescription"
+                                    rows="4"
+                                    placeholder="Describe your strategy details, target segments, expected ROI impact..."
+                                    required
+                                    class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-primary"
+                            ></textarea>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <label class="flex flex-col">
+                                Base Price ($)
+                                <input
+                                        type="number" min="0" step="0.01" id="basePrice"
+                                        required
+                                        placeholder="e.g., 99.99"
+                                        class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                            </label>
+                            <label class="flex flex-col">
+                                Expected Discount (%)
+                                <input
+                                        type="number" min="0" max="100" step="0.1" id="discountPercent"
+                                        placeholder="e.g., 10"
+                                        class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                            </label>
+                            <label class="flex flex-col">
+                                Projected Units Sold
+                                <input
+                                        type="number" min="0" step="1" id="unitsSold"
+                                        required
+                                        placeholder="e.g., 500"
+                                        class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                            </label>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <label class="flex flex-col">
+                                Variable Cost per Unit ($)
+                                <input
+                                        type="number" min="0" step="0.01" id="variableCost"
+                                        required
+                                        placeholder="e.g., 40"
+                                        class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                            </label>
+                            <label class="flex flex-col">
+                                Fixed Costs ($)
+                                <input
+                                        type="number" min="0" step="0.01" id="fixedCost"
+                                        required
+                                        placeholder="e.g., 10000"
+                                        class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                            </label>
+                        </div>
+                        <button
+                                type="submit"
+                                class="bg-primary hover:bg-primaryDark text-white px-6 py-3 rounded font-semibold shadow transition hover:scale-105"
+                        >
+                            Save Strategy
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Strategy Cards -->
+                <div id="strategyBoard" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Cards will be dynamically inserted here -->
+                </div>
+            </section>
+
+            <script>
+                // Strategy board logic
+                document.addEventListener('DOMContentLoaded', () => {
+                    const strategyForm = document.getElementById('addStrategyForm');
+                    const strategyBoard = document.getElementById('strategyBoard');
+
+                    // Store strategies in localStorage
+                    let strategies = JSON.parse(localStorage.getItem('strategies')) || [];
+
+                    function renderStrategies() {
+                        strategyBoard.innerHTML = '';
+                        strategies.forEach((strategy, index) => {
+                            const card = document.createElement('div');
+                            card.className = 'bg-white rounded-xl border border-primary shadow hover:shadow-lg p-6 relative transition duration-300';
+                            card.innerHTML = `
+                            <button class="absolute top-3 right-3 text-gray-400 hover:text-primary" data-delete="${index}">
+                                <i data-feather="trash-2"></i>
+                            </button>
+                            <h3 class="text-xl font-bold text-primary mb-2">${strategy.title}</h3>
+                            <p class="text-gray-700 whitespace-pre-wrap">${strategy.description}</p>
+                        `;
+                            strategyBoard.appendChild(card);
+                        });
+                        feather.replace();
+                    }
+
+                    strategyForm.addEventListener('submit', e => {
+                        e.preventDefault();
+                        const title = document.getElementById('strategyTitle').value.trim();
+                        const description = document.getElementById('strategyDescription').value.trim();
+
+                        if (title && description) {
+                            strategies.push({ title, description });
+                            localStorage.setItem('strategies', JSON.stringify(strategies));
+                            renderStrategies();
+                            strategyForm.reset();
+                        }
+                    });
+
+                    strategyBoard.addEventListener('click', e => {
+                        if (e.target.closest('[data-delete]')) {
+                            const index = e.target.closest('[data-delete]').getAttribute('data-delete');
+                            strategies.splice(index, 1);
+                            localStorage.setItem('strategies', JSON.stringify(strategies));
+                            renderStrategies();
+                        }
+                    });
+
+                    renderStrategies();
+                });
+            </script>
+
+            <!-- ROI Calculator Section -->
+            <section class="mb-20 animate-fadeIn">
+                <h2 class="text-3xl font-bold mb-6 text-primary text-center">Advanced ROI Calculator</h2>
+
+                <div class="bg-white rounded-3xl shadow-xl p-8 max-w-4xl mx-auto">
+                    <form id="roiForm" class="space-y-6">
+
+                        <!-- Revenue Inputs -->
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2 text-primary">Revenue Inputs</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <label class="flex flex-col">
+                                    Initial Revenue ($)
+                                    <input
+                                            type="number" min="0" step="0.01" id="initialRevenue"
+                                            placeholder="e.g., 100000"
+                                            required
+                                            class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                    />
+                                </label>
+                                <label class="flex flex-col">
+                                    Recurring Monthly Revenue ($)
+                                    <input
+                                            type="number" min="0" step="0.01" id="recurringRevenue"
+                                            placeholder="e.g., 10000"
+                                            class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                    />
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Cost Inputs -->
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2 text-primary">Cost Inputs</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <label class="flex flex-col">
+                                    Initial Investment Cost ($)
+                                    <input
+                                            type="number" min="0" step="0.01" id="initialCost"
+                                            placeholder="e.g., 50000"
+                                            required
+                                            class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                    />
+                                </label>
+                                <label class="flex flex-col">
+                                    Recurring Monthly Cost ($)
+                                    <input
+                                            type="number" min="0" step="0.01" id="recurringCost"
+                                            placeholder="e.g., 2000"
+                                            class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                    />
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Time Period & Growth -->
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2 text-primary">Time Period & Growth</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <label class="flex flex-col">
+                                    Analysis Period (Months)
+                                    <input
+                                            type="number" min="1" step="1" id="analysisMonths"
+                                            placeholder="e.g., 12"
+                                            required
+                                            class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                    />
+                                </label>
+                                <label class="flex flex-col">
+                                    Exp. Monthly Revenue Growth (%)
+                                    <input
+                                            type="number" min="0" max="100" step="0.1" id="revenueGrowth"
+                                            placeholder="e.g., 3"
+                                            class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                    />
+                                </label>
+                                <label class="flex flex-col">
+                                    Exp. Monthly Cost Growth (%)
+                                    <input
+                                            type="number" min="0" max="100" step="0.1" id="costGrowth"
+                                            placeholder="e.g., 1"
+                                            class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                    />
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Profit Margin -->
+                        <div>
+                            <label class="flex flex-col">
+                                Estimated Profit Margin (%)
+                                <input
+                                        type="number" min="0" max="100" step="0.1" id="profitMargin"
+                                        placeholder="e.g., 25"
+                                        required
+                                        class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                            </label>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex gap-4 justify-center">
+                            <button
+                                    type="submit"
+                                    class="bg-primary hover:bg-primaryDark text-white px-8 py-3 rounded font-semibold shadow transition hover:scale-105"
+                            >
+                                Calculate ROI
+                            </button>
+                            <button
+                                    type="button"
+                                    id="resetBtn"
+                                    class="bg-gray-400 hover:bg-gray-500 text-white px-8 py-3 rounded font-semibold shadow transition hover:scale-105"
+                            >
+                                Reset
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Results Display -->
+                    <div id="roiResults" class="mt-10 p-6 bg-offwhite rounded-xl border border-primary text-primaryDark hidden">
+                        <h3 class="text-2xl font-semibold mb-4">Calculation Results</h3>
+                        <ul class="space-y-3">
+                            <li><strong>Total Revenue:</strong> $<span id="totalRevenue"></span></li>
+                            <li><strong>Total Costs:</strong> $<span id="totalCosts"></span></li>
+                            <li><strong>Net Profit:</strong> $<span id="netProfit"></span></li>
+                            <li><strong>Return on Investment (ROI):</strong> <span id="roiPercent"></span>%</li>
+                            <li><strong>Payback Period:</strong> <span id="paybackPeriod"></span> months</li>
+                            <li><strong>Annualized ROI:</strong> <span id="annualizedROI"></span>%</li>
+                            <li><strong>Profit Margin:</strong> <span id="profitMarginResult"></span>%</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <script>
+                document.getElementById('roiForm').addEventListener('submit', e => {
+                    e.preventDefault();
+
+                    // Grab inputs & parse numbers
+                    const initialRevenue = parseFloat(document.getElementById('initialRevenue').value) || 0;
+                    const recurringRevenue = parseFloat(document.getElementById('recurringRevenue').value) || 0;
+                    const initialCost = parseFloat(document.getElementById('initialCost').value) || 0;
+                    const recurringCost = parseFloat(document.getElementById('recurringCost').value) || 0;
+                    const months = parseInt(document.getElementById('analysisMonths').value) || 12;
+                    const revenueGrowth = parseFloat(document.getElementById('revenueGrowth').value) / 100 || 0;
+                    const costGrowth = parseFloat(document.getElementById('costGrowth').value) / 100 || 0;
+                    const profitMarginInput = parseFloat(document.getElementById('profitMargin').value) / 100 || 0;
+
+                    // Helper: calculate total revenue with growth
+                    function calcTotalWithGrowth(initial, recurring, growth, months) {
+                        let total = initial;
+                        for (let i = 1; i <= months; i++) {
+                            total += recurring * Math.pow(1 + growth, i-1);
+                        }
+                        return total;
+                    }
+
+                    // Calculate totals
+                    const totalRevenue = calcTotalWithGrowth(initialRevenue, recurringRevenue, revenueGrowth, months);
+                    const totalCosts = calcTotalWithGrowth(initialCost, recurringCost, costGrowth, months);
+
+                    const netProfit = totalRevenue - totalCosts;
+                    const roi = (netProfit / totalCosts) * 100;
+
+                    // Payback Period calculation (in months)
+                    // Assume monthly cash flow = recurringRevenue - recurringCost (adjusted for growth)
+                    let payback = 'N/A';
+                    if (netProfit > 0 && totalCosts > 0) {
+                        let cumulativeCashFlow = -initialCost;
+                        let monthCounter = 0;
+                        while (cumulativeCashFlow < 0 && monthCounter < months) {
+                            const monthRevenue = recurringRevenue * Math.pow(1 + revenueGrowth, monthCounter);
+                            const monthCost = recurringCost * Math.pow(1 + costGrowth, monthCounter);
+                            cumulativeCashFlow += (monthRevenue - monthCost);
+                            monthCounter++;
+                        }
+                        payback = monthCounter <= months ? monthCounter : 'More than analysis period';
+                    }
+
+                    // Annualized ROI calculation
+                    const years = months / 12;
+                    const annualizedROI = years > 0 ? (Math.pow(1 + roi / 100, 1 / years) - 1) * 100 : 0;
+
+                    // Display Results
+                    const formatCurrency = n => n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    const formatPercent = n => n.toFixed(2);
+
+                    document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+                    document.getElementById('totalCosts').textContent = formatCurrency(totalCosts);
+                    document.getElementById('netProfit').textContent = formatCurrency(netProfit);
+                    document.getElementById('roiPercent').textContent = formatPercent(roi);
+                    document.getElementById('paybackPeriod').textContent = payback;
+                    document.getElementById('annualizedROI').textContent = formatPercent(annualizedROI);
+                    document.getElementById('profitMarginResult').textContent = formatPercent(profitMarginInput * 100);
+
+                    document.getElementById('roiResults').classList.remove('hidden');
+                });
+
+                // Reset form and results
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    document.getElementById('roiForm').reset();
+                    document.getElementById('roiResults').classList.add('hidden');
+                });
+            </script>
+
+            <!-- Competitive Benchmarking Section -->
+            <section class="mb-20 animate-fadeIn">
+                <h2 class="text-3xl font-bold mb-6 text-primary text-center">
+                    Competitive Benchmarking
+                </h2>
+
+                <div class="bg-white rounded-3xl shadow-xl p-8 max-w-5xl mx-auto">
+                    <form id="competitorForm" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <label class="flex flex-col">
+                                Competitor Name
+                                <input
+                                        type="text"
+                                        id="competitorName"
+                                        required
+                                        placeholder="e.g., Rival Co."
+                                        class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                            </label>
+                            <label class="flex flex-col">
+                                Product Name
+                                <input
+                                        type="text"
+                                        id="competitorProduct"
+                                        required
+                                        placeholder="e.g., Premium Plan"
+                                        class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                            </label>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <label class="flex flex-col">
+                                Price ($)
+                                <input
+                                        type="number"
+                                        id="competitorPrice"
+                                        min="0"
+                                        step="0.01"
+                                        required
+                                        placeholder="e.g., 99.99"
+                                        class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                            </label>
+                            <label class="flex flex-col">
+                                Variable Cost ($)
+                                <input
+                                        type="number"
+                                        id="competitorVariableCost"
+                                        min="0"
+                                        step="0.01"
+                                        required
+                                        placeholder="e.g., 40"
+                                        class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                            </label>
+                            <label class="flex flex-col">
+                                Fixed Cost Allocation ($)
+                                <input
+                                        type="number"
+                                        id="competitorFixedCost"
+                                        min="0"
+                                        step="0.01"
+                                        required
+                                        placeholder="e.g., 5000"
+                                        class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                            </label>
+                        </div>
+
+                        <div class="flex justify-center gap-4">
+                            <button
+                                    type="submit"
+                                    class="bg-primary hover:bg-primaryDark text-white px-8 py-3 rounded font-semibold shadow transition hover:scale-105"
+                            >
+                                Add Competitor
+                            </button>
+                            <button
+                                    type="button"
+                                    id="resetCompetitorsBtn"
+                                    class="bg-gray-400 hover:bg-gray-500 text-white px-8 py-3 rounded font-semibold shadow transition hover:scale-105"
+                            >
+                                Reset
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="competitorsList" class="mt-10 hidden">
+                        <h3 class="text-2xl font-semibold mb-4 text-primaryDark">Competitor Comparison Table</h3>
+                        <table class="min-w-full border border-gray-300 text-sm text-left">
+                            <thead class="bg-calmGray-light">
+                            <tr>
+                                <th class="py-3 px-4 border-b">Competitor</th>
+                                <th class="py-3 px-4 border-b">Product</th>
+                                <th class="py-3 px-4 border-b">Price ($)</th>
+                                <th class="py-3 px-4 border-b">Variable Cost ($)</th>
+                                <th class="py-3 px-4 border-b">Fixed Cost ($)</th>
+                                <th class="py-3 px-4 border-b">Total Cost ($)</th>
+                                <th class="py-3 px-4 border-b">Profit ($)</th>
+                                <th class="py-3 px-4 border-b">Profit Margin (%)</th>
+                            </tr>
+                            </thead>
+                            <tbody id="competitorTableBody" class="bg-offwhite"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <script>
+                const competitorForm = document.getElementById('competitorForm');
+                const competitorsList = document.getElementById('competitorsList');
+                const competitorTableBody = document.getElementById('competitorTableBody');
+                const resetCompetitorsBtn = document.getElementById('resetCompetitorsBtn');
+
+                let competitors = [];
+
+                competitorForm.addEventListener('submit', e => {
+                    e.preventDefault();
+
+                    const name = document.getElementById('competitorName').value.trim();
+                    const product = document.getElementById('competitorProduct').value.trim();
+                    const price = parseFloat(document.getElementById('competitorPrice').value) || 0;
+                    const variableCost = parseFloat(document.getElementById('competitorVariableCost').value) || 0;
+                    const fixedCost = parseFloat(document.getElementById('competitorFixedCost').value) || 0;
+
+                    const totalCost = variableCost + fixedCost;
+                    const profit = price - totalCost;
+                    const profitMargin = price > 0 ? (profit / price) * 100 : 0;
+
+                    const competitor = {
+                        name,
+                        product,
+                        price,
+                        variableCost,
+                        fixedCost,
+                        totalCost,
+                        profit,
+                        profitMargin
+                    };
+
+                    competitors.push(competitor);
+                    renderCompetitors();
+
+                    competitorForm.reset();
+                });
+
+                resetCompetitorsBtn.addEventListener('click', () => {
+                    competitorForm.reset();
+                    competitors = [];
+                    renderCompetitors();
+                });
+
+                function renderCompetitors() {
+                    if (competitors.length === 0) {
+                        competitorsList.classList.add('hidden');
+                        competitorTableBody.innerHTML = '';
+                        return;
+                    }
+
+                    competitorsList.classList.remove('hidden');
+                    competitorTableBody.innerHTML = competitors.map(c => `
+              <tr class="hover:bg-calmGray-light transition">
+                <td class="py-2 px-4 border-b">${c.name}</td>
+                <td class="py-2 px-4 border-b">${c.product}</td>
+                <td class="py-2 px-4 border-b">$${c.price.toFixed(2)}</td>
+                <td class="py-2 px-4 border-b">$${c.variableCost.toFixed(2)}</td>
+                <td class="py-2 px-4 border-b">$${c.fixedCost.toFixed(2)}</td>
+                <td class="py-2 px-4 border-b">$${c.totalCost.toFixed(2)}</td>
+                <td class="py-2 px-4 border-b">$${c.profit.toFixed(2)}</td>
+                <td class="py-2 px-4 border-b">${c.profitMargin.toFixed(2)}%</td>
+              </tr>
+            `).join('');
+                }
+            </script>
+            <!-- Price Elasticity & Demand Curve Visualizer -->
+            <section class="mb-20 animate-fadeIn">
+                <h2 class="text-3xl font-bold mb-6 text-primary text-center">
+                    Price Elasticity & Demand Curve Visualizer
+                </h2>
+
+                <div class="bg-white rounded-3xl shadow-xl p-8 max-w-5xl mx-auto">
+                    <form id="demandPointForm" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <label class="flex flex-col">
+                                Price ($)
+                                <input
+                                        type="number"
+                                        id="demandPrice"
+                                        min="0"
+                                        step="0.01"
+                                        required
+                                        placeholder="e.g., 99.99"
+                                        class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                            </label>
+                            <label class="flex flex-col">
+                                Demand (Units)
+                                <input
+                                        type="number"
+                                        id="demandUnits"
+                                        min="0"
+                                        required
+                                        placeholder="e.g., 1000"
+                                        class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                            </label>
+                        </div>
+                        <div class="flex justify-center gap-4">
+                            <button
+                                    type="submit"
+                                    class="bg-primary hover:bg-primaryDark text-white px-8 py-3 rounded font-semibold shadow transition hover:scale-105"
+                            >
+                                Add Data Point
+                            </button>
+                            <button
+                                    type="button"
+                                    id="resetDemandPointsBtn"
+                                    class="bg-gray-400 hover:bg-gray-500 text-white px-8 py-3 rounded font-semibold shadow transition hover:scale-105"
+                            >
+                                Reset
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="mt-10">
+                        <canvas id="demandChart" class="w-full max-w-3xl mx-auto"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script>
+                const demandPointForm = document.getElementById('demandPointForm');
+                const demandPriceInput = document.getElementById('demandPrice');
+                const demandUnitsInput = document.getElementById('demandUnits');
+                const resetDemandPointsBtn = document.getElementById('resetDemandPointsBtn');
+                const demandChartCtx = document.getElementById('demandChart').getContext('2d');
+
+                let demandPoints = [];
+
+                // Chart initialization
+                const demandChart = new Chart(demandChartCtx, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [
+                            {
+                                label: 'Demand Curve',
+                                data: [],
+                                backgroundColor: '#256d3b',
+                                borderColor: '#256d3b',
+                                showLine: true,
+                                fill: false,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Revenue Curve',
+                                data: [],
+                                backgroundColor: '#4a9867',
+                                borderColor: '#4a9867',
+                                showLine: true,
+                                fill: false,
+                                tension: 0.3
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => {
+                                        if (ctx.dataset.label === 'Revenue Curve') {
+                                            return `Price: $${ctx.parsed.x}, Revenue: $${ctx.parsed.y.toFixed(2)}`;
+                                        }
+                                        return `Price: $${ctx.parsed.x}, Demand: ${ctx.parsed.y}`;
+                                    }
+                                }
+                            },
+                            legend: {
+                                position: 'bottom'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Price ($)'
+                                },
+                                min: 0,
+                                max: 1000
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Units / Revenue ($)'
+                                },
+                                min: 0,
+                                max: 10000
+                            }
+                        }
+                    }
+                });
+
+                demandPointForm.addEventListener('submit', e => {
+                    e.preventDefault();
+
+                    const price = parseFloat(demandPriceInput.value);
+                    const units = parseFloat(demandUnitsInput.value);
+
+                    if (price < 0 || units < 0 || !isFinite(price) || !isFinite(units)) {
+                        alert('Please enter valid, non-negative numbers.');
+                        return;
+                    }
+
+                    demandPoints.push({ x: price, y: units });
+                    demandPoints.sort((a, b) => a.x - b.x);
+
+                    updateDemandChart();
+                    demandPointForm.reset();
+                });
+
+                resetDemandPointsBtn.addEventListener('click', () => {
+                    demandPoints = [];
+                    updateDemandChart();
+                });
+
+                function updateDemandChart() {
+                    const demandData = demandPoints;
+                    const revenueData = demandPoints.map(p => ({ x: p.x, y: p.x * p.y }));
+
+                    demandChart.data.datasets[0].data = demandData;
+                    demandChart.data.datasets[1].data = revenueData;
+
+                    // Dynamically set axis limits with buffer
+                    const prices = demandPoints.map(p => p.x);
+                    const demands = demandPoints.map(p => p.y);
+                    const revenues = revenueData.map(p => p.y);
+
+                    const xMin = Math.max(0, Math.min(...prices) - 10);
+                    const xMax = Math.max(50, Math.max(...prices) + 10);
+                    const yMin = 0;
+                    const yMax = Math.max(
+                        100,
+                        Math.max(...demands, ...revenues) * 1.2
+                    );
+
+                    demandChart.options.scales.x.min = xMin;
+                    demandChart.options.scales.x.max = xMax;
+                    demandChart.options.scales.y.min = yMin;
+                    demandChart.options.scales.y.max = yMax;
+
+                    demandChart.update();
+                }
+            </script>
+            <section class="mb-20 animate-fadeIn">
+                <h2 class="text-3xl font-bold mb-6 text-primary text-center">
+                    Dynamic Pricing Simulator
+                </h2>
+
+                <div class="bg-white rounded-3xl shadow-xl p-8 max-w-5xl mx-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <label class="flex flex-col">
+                            Base Price ($)
+                            <input
+                                    type="number"
+                                    id="basePrice"
+                                    min="0"
+                                    step="0.01"
+                                    value="50"
+                                    class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                        </label>
+                        <label class="flex flex-col">
+                            Base Customers
+                            <input
+                                    type="number"
+                                    id="baseCustomers"
+                                    min="1"
+                                    value="1000"
+                                    class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                        </label>
+                        <label class="flex flex-col">
+                            Price Elasticity
+                            <input
+                                    type="number"
+                                    id="elasticity"
+                                    step="0.1"
+                                    value="1.2"
+                                    class="mt-1 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                            <small class="text-gray-500 mt-1">
+                                E.g., 1.0 = proportionate, 1.5 = high sensitivity
+                            </small>
+                        </label>
+                    </div>
+
+                    <div class="text-center mb-6">
+                        <button
+                                id="runSimulationBtn"
+                                class="bg-primary hover:bg-primaryDark text-white px-8 py-3 rounded font-semibold shadow-md transition hover:scale-105"
+                        >
+                            Run Simulation
+                        </button>
+                    </div>
+
+                    <div>
+                        <canvas id="pricingChart" height="400"></canvas>
+                    </div>
+                </div>
+            </section>
+            <script>
+                const pricingChartCtx = document.getElementById('pricingChart').getContext('2d');
+                let pricingChart;
+
+                document.getElementById('runSimulationBtn').addEventListener('click', () => {
+                    const basePrice = parseFloat(document.getElementById('basePrice').value);
+                    const baseCustomers = parseInt(document.getElementById('baseCustomers').value);
+                    const elasticity = parseFloat(document.getElementById('elasticity').value);
+
+                    if (isNaN(basePrice) || isNaN(baseCustomers) || isNaN(elasticity) || basePrice <= 0 || baseCustomers <= 0) {
+                        alert("Please enter valid positive values.");
+                        return;
+                    }
+
+                    const priceRange = [];
+                    const revenueData = [];
+                    const customerData = [];
+
+                    for (let price = basePrice * 0.5; price <= basePrice * 1.5; price += 1) {
+                        const demand = baseCustomers * Math.pow(basePrice / price, elasticity);
+                        const revenue = price * demand;
+                        priceRange.push(price.toFixed(2));
+                        revenueData.push(revenue.toFixed(2));
+                        customerData.push(demand.toFixed(0));
+                    }
+
+                    if (pricingChart) pricingChart.destroy();
+
+                    pricingChart = new Chart(pricingChartCtx, {
+                        type: 'line',
+                        data: {
+                            labels: priceRange,
+                            datasets: [
+                                {
+                                    label: 'Estimated Revenue ($)',
+                                    data: revenueData,
+                                    borderColor: '#256d3b',
+                                    backgroundColor: 'rgba(37, 109, 59, 0.2)',
+                                    yAxisID: 'y',
+                                    tension: 0.3
+                                },
+                                {
+                                    label: 'Estimated Customers',
+                                    data: customerData,
+                                    borderColor: '#7c3aed',
+                                    backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                                    yAxisID: 'y1',
+                                    tension: 0.3
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false
+                            },
+                            stacked: false,
+                            scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Price ($)'
+                                    }
+                                },
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    title: {
+                                        display: true,
+                                        text: 'Revenue ($)'
+                                    },
+                                    min: 0,
+                                    suggestedMax: Math.max(...revenueData) * 1.2
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    title: {
+                                        display: true,
+                                        text: 'Customers'
+                                    },
+                                    grid: {
+                                        drawOnChartArea: false
+                                    },
+                                    min: 0,
+                                    suggestedMax: Math.max(...customerData) * 1.2
+                                }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (context) {
+                                            if (context.dataset.label === 'Estimated Revenue ($)') {
+                                                return `$${parseFloat(context.raw).toLocaleString()}`;
+                                            } else {
+                                                return `${parseInt(context.raw).toLocaleString()} customers`;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+            </script>
+            <section class="mb-20 animate-fadeIn">
+                <h2 class="text-3xl font-bold mb-6 text-primary text-center">
+                    Export & Report Generation
+                </h2>
+
+                <div class="bg-white rounded-3xl shadow-xl p-8 max-w-4xl mx-auto">
+                    <p class="text-gray-700 mb-6">
+                        Generate shareable reports or export your analyses for presentations. Choose your preferred format below:
+                    </p>
+
+                    <div class="flex flex-col md:flex-row gap-6 mb-8">
+                        <button id="exportPdfBtn" class="bg-primary hover:bg-primaryDark text-white px-6 py-3 rounded font-semibold shadow transition hover:scale-105">
+                            Export as PDF
+                        </button>
+                        <button id="exportCsvBtn" class="bg-primary hover:bg-primaryDark text-white px-6 py-3 rounded font-semibold shadow transition hover:scale-105">
+                            Download CSV
+                        </button>
+                        <button id="openReportModalBtn" class="bg-calmGray hover:bg-calmGray-dark text-gray-800 px-6 py-3 rounded font-semibold shadow transition hover:scale-105">
+                            Share / Generate Report
+                        </button>
+                    </div>
+
+                    <!-- Report Modal -->
+                    <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+                        <div class="bg-white rounded-xl p-8 max-w-lg w-full shadow-lg animate-fadeIn">
+                            <h3 class="text-2xl font-bold mb-4 text-primary">
+                                Generate Shareable Report
+                            </h3>
+                            <p class="text-gray-700 mb-4">
+                                Choose audience and visibility options for your report. Add optional notes before sharing.
+                            </p>
+
+                            <label class="block mb-3">
+                                Audience
+                                <select id="reportAudience" class="mt-1 w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <option value="internal">Internal Team</option>
+                                    <option value="client">Client Presentation</option>
+                                    <option value="investor">Investor Report</option>
+                                </select>
+                            </label>
+
+                            <label class="block mb-4">
+                                Notes
+                                <textarea id="reportNotes" rows="3" placeholder="Optional notes for your report..." class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+                            </label>
+
+                            <div class="flex justify-end gap-4">
+                                <button id="closeReportModalBtn" class="bg-calmGray hover:bg-calmGray-dark text-gray-800 px-4 py-2 rounded font-semibold shadow">
+                                    Cancel
+                                </button>
+                                <button id="generateReportBtn" class="bg-primary hover:bg-primaryDark text-white px-4 py-2 rounded font-semibold shadow">
+                                    Generate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="reportConfirmation" class="hidden mt-6 p-4 rounded border border-green-400 bg-green-50 text-green-700">
+                        ✅ Report generated successfully. Shareable link: <span id="reportLink" class="underline cursor-pointer">https://example.com/share/your-report</span>
+                    </div>
+                </div>
+            </section>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+            <script>
+                // PDF Export
+                document.getElementById('exportPdfBtn').addEventListener('click', () => {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+
+                    doc.setFontSize(18);
+                    doc.text("Financial Performance Report", 14, 22);
+
+                    doc.setFontSize(12);
+                    doc.text("This report contains ROI analysis, pricing strategies, and simulated scenarios.", 14, 32);
+
+                    doc.text("Generated on: " + new Date().toLocaleString(), 14, 42);
+
+                    // Add dummy content example
+                    doc.setFontSize(10);
+                    doc.text("Pricing Simulator Results:", 14, 52);
+                    doc.text(" - Base Price: $" + document.getElementById('basePrice').value, 14, 60);
+                    doc.text(" - Base Customers: " + document.getElementById('baseCustomers').value, 14, 68);
+                    doc.text(" - Elasticity: " + document.getElementById('elasticity').value, 14, 76);
+
+                    doc.save('financial-performance-report.pdf');
+                });
+
+                // CSV Export
+                document.getElementById('exportCsvBtn').addEventListener('click', () => {
+                    const csvContent = [
+                        ["Metric", "Value"],
+                        ["Base Price", document.getElementById('basePrice').value],
+                        ["Base Customers", document.getElementById('baseCustomers').value],
+                        ["Elasticity", document.getElementById('elasticity').value],
+                        ["Generated At", new Date().toLocaleString()]
+                    ]
+                        .map(e => e.join(","))
+                        .join("\n");
+
+                    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = "pricing-strategies.csv";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
+
+                // Report Modal
+                const modal = document.getElementById('reportModal');
+                const openBtn = document.getElementById('openReportModalBtn');
+                const closeBtn = document.getElementById('closeReportModalBtn');
+                const generateBtn = document.getElementById('generateReportBtn');
+                const confirmation = document.getElementById('reportConfirmation');
+
+                openBtn.addEventListener('click', () => {
+                    modal.classList.remove('hidden');
+                });
+
+                closeBtn.addEventListener('click', () => {
+                    modal.classList.add('hidden');
+                });
+
+                generateBtn.addEventListener('click', () => {
+                    modal.classList.add('hidden');
+                    confirmation.classList.remove('hidden');
+                    document.getElementById('reportLink').textContent = "https://example.com/share/your-report";
+                });
+            </script>
+        </main>
+    </body>
+</html>

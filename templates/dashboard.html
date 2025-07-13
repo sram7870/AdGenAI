@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>AdGen Dashboard</title>
+
+        <!-- TailwindCSS -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet" />
+        <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['"Trebuchet MS"', 'Helvetica', 'sans-serif']
+                        },
+                        colors: {
+                            primaryGreen: {
+                                DEFAULT: '#256d3b',
+                                light: '#4a9867',
+                                dark: '#1d502a',
+                            },
+                            offwhite: '#f8faf6',
+                            calmGray: {
+                                light: '#e6e8e3',
+                                DEFAULT: '#9ca3af',
+                                dark: '#6b7280',
+                            }
+                        },
+                        keyframes: {
+                            fadeIn: {
+                                '0%': { opacity: 0, transform: 'translateY(10px)' },
+                                '100%': { opacity: 1, transform: 'translateY(0)' }
+                            }
+                        },
+                        animation: {
+                            fadeIn: 'fadeIn 0.5s ease-out forwards'
+                        }
+                    }
+                }
+            }
+        </script>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="{{ url_for('static', filename='chatbot.js') }}"></script>
+
+        <style>
+            body {
+                background-color: #f8faf6;
+                font-family: "Trebuchet MS", Helvetica, sans-serif;
+            }
+            button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                box-shadow: none !important;
+            }
+            #editor {
+                height: 280px;
+                background: white;
+                border: 1px solid #9ca3af;
+                border-radius: 0.5rem;
+                padding: 0.5rem;
+                overflow-y: auto;
+            }
+            .mood-btn {
+                border-radius: 9999px;
+                border: 2px solid transparent;
+                cursor: pointer;
+                padding: 0.5rem 0.75rem;
+                font-size: 1.5rem;
+                transition: all 0.3s ease;
+            }
+            .mood-btn:hover {
+                transform: scale(1.1);
+            }
+            .mood-btn.selected {
+                border-color: #256d3b;
+                background-color: #d1fae5;
+            }
+            input[type="date"]::-webkit-calendar-picker-indicator {
+                /* You may need to use background-image to create a green highlight effect */
+                background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 24 24"><path fill="green" d="M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V8h16v13z"/><path fill="white" d="M9 10h1v1H9v-1zM11 10h1v1h-1v-1zM13 10h1v1h-1v-1zM9 12h1v1H9v-1zM11 12h1v1h-1v-1zM13 12h1v1h-1v-1zM9 14h1v1H9v-1zM11 14h1v1h-1v-1zM13 14h1v1h-1v-1z"/></svg>') no-repeat;
+                background-size: cover;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body class="text-primaryGreen font-sans">
+
+        <nav class="bg-[#f9f9f6] backdrop-blur-md shadow-sm border-b border-gray-200 py-4 px-8 flex items-center justify-between sticky top-0 z-50">
+            <div class="flex items-center space-x-3">
+                <i data-feather="home" class="w-5 h-5 text-[#2f5930]"></i>
+                <a href="/dashboard" class="text-lg font-bold text-[#2f5930] tracking-wide">Dashboard</a>
+            </div>
+            <div class="flex space-x-6 text-sm font-medium">
+                <a href="/optimization" class="text-gray-600 hover:text-[#2f5930]">Optimize Ads</a>
+                <a href="/academy" class="text-gray-600 hover:text-[#2f5930]">Ad Academy</a>
+                <a href="/financial" class="text-gray-600 hover:text-[#2f5930]">Ad Financials</a>
+
+                <!--
+                <a href="/stats" class="text-gray-600 hover:text-[#2f5930]">Statistics</a>
+                <a href="/info" class="text-gray-600 hover:text-[#2f5930]">Info</a>
+                <a href="connections.html">Connections</a>
+                -->
+            </div>
+        </nav>
+
+        <div class="w-2 fixed top-0 right-0 bottom-0 bg-calmGray-light transition-colors duration-500 z-20"></div>
+
+        <main class="max-w-6xl mx-auto py-10 px-6 animate-fadeIn">
+            <header class="mb-10 text-center">
+                <h1 class="text-5xl font-black mb-3">Advertisement Dashboard</h1>
+                <p class="text-primaryGreen-dark text-lg">Chatbot, AI Analytics, and More Small Functionalities 😊</p>
+            </header>
+        </main>
+
+        <!-- Task Manager Section -->
+        <section class="mb-16 px-4 md:px-16 animate-fade-in-up">
+            <h2 class="text-3xl font-bold mb-6 text-primaryGreen-dark">Your Task Manager</h2>
+
+            <!-- Add Task Form -->
+            <section class="bg-white rounded-3xl shadow-xl p-8 mb-10 transition-shadow duration-300 hover:shadow-2xl animate-fadeIn">
+                <form action="/dashboard/add_task" method="POST" class="grid gap-4">
+                    <div>
+                        <label class="block mb-2 font-semibold text-primaryGreen-dark">Task Title:</label>
+                        <input name="title" type="text" placeholder="Enter task title" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primaryGreen-light">
+                    </div>
+
+                    <div>
+                        <label class="block mb-2 font-semibold text-primaryGreen-dark">Description:</label>
+                        <textarea name="description" rows="3" placeholder="Enter full task description" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primaryGreen-light"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block mb-2 font-semibold text-primaryGreen-dark">Priority:</label>
+                        <select name="priority" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primaryGreen-light">
+                            <option value="">Select Priority</option>
+                            <option value="High">🔥 High</option>
+                            <option value="Medium">🌟 Medium</option>
+                            <option value="Low">🍃 Low</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="bg-primaryGreen-dark text-white px-6 py-2 rounded-xl hover:bg-primaryGreen transition mt-4">Add Task</button>
+                </form>
+            </section>
+
+            <!-- Search Field -->
+            <input id="taskSearch" type="text" placeholder="🔍 Search tasks by title or tag..." class="w-full mb-8 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primaryGreen-light">
+
+            <!-- Task Cards Grid -->
+            <div id="taskList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for task in tasks %}
+                <div class="task-item bg-white rounded-3xl shadow-md p-6 relative transition hover:shadow-xl" data-title="{{ task.title | lower }}" data-tag="{{ task.tag | lower }}">
+                    <div class="flex flex-col gap-2">
+                        <h3 class="text-xl font-semibold text-gray-800">{{ task.title }}</h3>
+                        <p class="text-gray-600 text-sm italic">{{ task.summary }}</p>
+                        <span class="inline-block bg-gray-200 text-primaryGreen-dark px-3 py-1 rounded-full text-xs font-medium mt-1">#{{ task.tag }}</span>
+                        <span class="text-sm text-gray-500 mt-1">Priority: {{ task.priority or "N/A" }}</span>
+                    </div>
+
+                    <!-- View Full Description Button -->
+                    <button onclick="openModal({{ task.id }})" class="absolute top-3 right-3 text-primaryGreen-dark hover:underline text-sm">View</button>
+
+                    <!-- Delete Form -->
+                    <form action="/dashboard/delete_task/{{ task.id }}" method="POST" class="mt-4">
+                        <button type="submit" class="text-red-500 hover:text-red-700 text-sm">🗑 Delete</button>
+                    </form>
+                </div>
+
+                <!-- Modal -->
+                <div id="modal-{{ task.id }}" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                    <div class="bg-white rounded-2xl shadow-lg p-6 w-11/12 max-w-lg relative">
+                        <h2 class="text-2xl font-bold text-primaryGreen-dark mb-4">{{ task.title }}</h2>
+                        <p class="text-gray-700 mb-6 whitespace-pre-wrap">{{ task.description }}</p>
+                        <button onclick="closeModal({{ task.id }})" class="absolute top-2 right-3 text-gray-400 hover:text-gray-600 text-xl">×</button>
+                        <button onclick="closeModal({{ task.id }})" class="mt-4 bg-primaryGreen-dark text-white px-4 py-2 rounded-lg hover:bg-primaryGreen w-full">Close</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <script>
+                function openModal(id) {
+                    const modal = document.getElementById(`modal-${id}`);
+                    if (modal) {
+                        modal.classList.remove('hidden');
+                    }
+                }
+
+                function closeModal(id) {
+                    const modal = document.getElementById(`modal-${id}`);
+                    if (modal) {
+                        modal.classList.add('hidden');
+                    }
+                }
+
+                document.addEventListener('DOMContentLoaded', () => {
+                    const searchInput = document.getElementById('taskSearch');
+                    const taskItems = document.querySelectorAll('.task-item');
+
+                    searchInput.addEventListener('input', () => {
+                        const query = searchInput.value.toLowerCase();
+
+                        taskItems.forEach(item => {
+                            const title = item.getAttribute('data-title') || '';
+                            const tag = item.getAttribute('data-tag') || '';
+                            const matches = title.includes(query) || tag.includes(query);
+                            item.style.display = matches ? 'block' : 'none';
+                        });
+                    });
+                });
+
+            </script>
+        </section>
+
+        <!-- Chabot Section -->
+        <section class="mb-16 px-4 md:px-16 animate-fade-in-up">
+            <h2 class="text-3xl font-bold mb-6 text-primaryGreen-dark">Advertisement Chatbot</h2>
+
+            <div class="bg-white rounded-3xl shadow-xl p-8 transition-shadow duration-300 hover:shadow-2xl">
+
+                <!-- Chat Window -->
+                <div id="chat-window" class="h-[350px] overflow-y-auto bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6 space-y-4">
+                    <!-- Messages will appear here -->
+                </div>
+
+                <!-- Typing Indicator -->
+                <div id="typing-indicator" class="flex items-center space-x-2 text-gray-500 mb-4 hidden">
+                    <span>Bot is thinking</span>
+                    <div class="typing-dots flex gap-1">
+                        <div class="h-2 w-2 rounded-full bg-gray-400 animate-bounce [animation-delay:.1s]"></div>
+                        <div class="h-2 w-2 rounded-full bg-gray-400 animate-bounce [animation-delay:.2s]"></div>
+                        <div class="h-2 w-2 rounded-full bg-gray-400 animate-bounce [animation-delay:.3s]"></div>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <form id="chat-form" class="flex gap-3">
+                    <input
+                            type="text"
+                            id="user-input"
+                            placeholder="Type something..."
+                            autocomplete="off"
+                            class="flex-grow border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primaryGreen"
+                    />
+                    <button
+                            type="submit"
+                            class="bg-primaryGreen-dark text-white px-6 py-2 rounded-lg hover:bg-primaryGreen transition"
+                    >
+                        Send
+                    </button>
+                </form>
+            </div>
+        </section>
+    </body>
+</html>
